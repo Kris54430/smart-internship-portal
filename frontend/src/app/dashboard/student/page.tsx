@@ -33,7 +33,7 @@ export default function StudentDashboard() {
 
   // Form profile edits
   const [profileSkills, setProfileSkills] = useState('');
-  const [profileCgpa, setProfileCgpa] = useState('3.5');
+  const [profileCgpa, setProfileCgpa] = useState('');
   const [profileLinks, setProfileLinks] = useState({ github: '', linkedin: '', portfolio: '' });
   const [profileEducation, setProfileEducation] = useState<any[]>([]);
   const [profileProjects, setProfileProjects] = useState<any[]>([]);
@@ -43,9 +43,9 @@ export default function StudentDashboard() {
   const [newEduInst, setNewEduInst] = useState('');
   const [newEduDegree, setNewEduDegree] = useState('');
   const [newEduField, setNewEduField] = useState('');
-  const [newEduStart, setNewEduStart] = useState('2022');
-  const [newEduEnd, setNewEduEnd] = useState('2026');
-  const [newEduCgpa, setNewEduCgpa] = useState('3.5');
+  const [newEduStart, setNewEduStart] = useState('');
+  const [newEduEnd, setNewEduEnd] = useState('');
+  const [newEduCgpa, setNewEduCgpa] = useState('');
 
   // Projects Sub-form States
   const [newProjTitle, setNewProjTitle] = useState('');
@@ -94,18 +94,15 @@ export default function StudentDashboard() {
       setLoading(true);
       // Try calling backend, fallback to local simulations on catch
       const profileData = await apiFetch('/student/profile').catch(() => ({
-        skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Node.js', 'Express', 'MongoDB'],
-        cgpa: 3.92,
-        education: [{ institution: 'Stanford University', degree: 'BS CS', fieldOfStudy: 'Computer Science', startYear: 2023, endYear: 2027, cgpa: 3.92 }],
-        projects: [
-          { title: 'E-Commerce Dashboard', description: 'A sales analytics layout using React.', technologies: ['React', 'TypeScript'] },
-          { title: 'Task Manager API', description: 'RESTful API built with Express.', technologies: ['Node.js', 'Express'] }
-        ],
-        certifications: [{ name: 'AWS Cloud Practitioner', issuingOrganization: 'Amazon Web Services', issueDate: '2025-05-15' }],
-        links: { portfolio: 'https://alexrivera.dev', github: 'https://github.com/alexrivera', linkedin: 'https://linkedin.com/in/alexrivera' },
+        skills: [],
+        cgpa: 0,
+        education: [],
+        projects: [],
+        certifications: [],
+        links: { portfolio: '', github: '', linkedin: '' },
         resumeUrl: '',
-        atsScore: 88,
-        atsSuggestions: ['Add more metrics-focused achievements.', 'Incorporate cloud deployment keywords.']
+        atsScore: 0,
+        atsSuggestions: []
       }));
 
       const jobsData = await apiFetch(`/internships?search=${searchQuery}&mode=${modeFilter}&location=${locFilter}`).catch(() => [
@@ -130,7 +127,7 @@ export default function StudentDashboard() {
 
       setProfile(profileData);
       setProfileSkills(profileData.skills?.join(', ') || '');
-      setProfileCgpa(profileData.cgpa?.toString() || '3.5');
+      setProfileCgpa(profileData.cgpa ? profileData.cgpa.toString() : '');
       setProfileLinks(profileData.links || { github: '', linkedin: '', portfolio: '' });
       setProfileEducation(profileData.education || []);
       setProfileProjects(profileData.projects || []);
@@ -182,9 +179,9 @@ export default function StudentDashboard() {
       institution: newEduInst,
       degree: newEduDegree,
       fieldOfStudy: newEduField,
-      startYear: parseInt(newEduStart) || 2022,
-      endYear: parseInt(newEduEnd) || 2026,
-      cgpa: parseFloat(newEduCgpa) || 3.5
+      startYear: parseInt(newEduStart) || new Date().getFullYear(),
+      endYear: parseInt(newEduEnd) || new Date().getFullYear() + 4,
+      cgpa: parseFloat(newEduCgpa) || 0
     };
     setProfileEducation([...profileEducation, newItem]);
     setNewEduInst('');
@@ -462,7 +459,7 @@ export default function StudentDashboard() {
               }`}
             >
               <User className="w-4 h-4" />
-              <span>Resume/Portfolio Builder</span>
+              <span>Profile & Settings</span>
             </button>
             <button
               onClick={() => setActiveTab('chatbot')}
@@ -953,353 +950,350 @@ export default function StudentDashboard() {
                 </motion.div>
               )}
 
-              {/* Tab 3: Resume Builder */}
+              {/* Tab 3: Profile & Settings */}
               {activeTab === 'profile' && (
                 <motion.div
                   key="profile"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-6"
+                  className="space-y-8"
                 >
-                  <div>
-                    <h2 className="text-2xl font-extrabold">Resume & Portfolio Builder</h2>
-                    <p className="text-xs text-slate-400 font-semibold mt-1">Configure profile criteria manually or sync credentials automatically</p>
-                  </div>
-
-                  {/* Sync tools */}
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div className="p-6 glass-panel rounded-2xl border border-white/5 space-y-4">
-                      <h4 className="font-extrabold text-sm text-indigo-400 flex items-center space-x-2">
-                        <Github className="w-5 h-5" />
-                        <span>GitHub Profile Sync</span>
-                      </h4>
-                      <form onSubmit={handleGitHubImport} className="space-y-3">
-                        <input
-                          type="text"
-                          required
-                          placeholder="Enter username (e.g. alexrivera)"
-                          value={githubUser}
-                          onChange={(e) => setGithubUser(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500"
-                        />
-                        <button
-                          type="submit"
-                          disabled={importingGit}
-                          className="w-full py-2 bg-slate-800 text-indigo-400 hover:text-white border border-indigo-500/20 hover:border-indigo-500 rounded-lg text-xs font-bold transition-all flex justify-center items-center space-x-1.5"
-                        >
-                          {importingGit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                          <span>Sync Repositories & Tech</span>
-                        </button>
-                      </form>
-                    </div>
-
-                    <div className="p-6 glass-panel rounded-2xl border border-white/5 space-y-4">
-                      <h4 className="font-extrabold text-sm text-indigo-400 flex items-center space-x-2">
-                        <Linkedin className="w-5 h-5" />
-                        <span>LinkedIn Profile Sync</span>
-                      </h4>
-                      <form onSubmit={handleLinkedInImport} className="space-y-3">
-                        <input
-                          type="text"
-                          required
-                          placeholder="Enter profile URL (e.g. linkedin.com/in/alex)"
-                          value={linkedinUrl}
-                          onChange={(e) => setLinkedinUrl(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500"
-                        />
-                        <button
-                          type="submit"
-                          disabled={importingIn}
-                          className="w-full py-2 bg-slate-800 text-indigo-400 hover:text-white border border-indigo-500/20 hover:border-indigo-500 rounded-lg text-xs font-bold transition-all flex justify-center items-center space-x-1.5"
-                        >
-                          {importingIn ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                          <span>Sync Certifications & Education</span>
-                        </button>
-                      </form>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h2 className="text-2xl font-extrabold">Profile & Settings</h2>
+                      <p className="text-xs text-slate-400 font-semibold mt-1">Manage your professional identity and application preferences</p>
                     </div>
                   </div>
 
-                  {/* Profile Edit Fields */}
-                  <form onSubmit={handleProfileSave} className="p-6 glass-panel rounded-2xl border border-white/5 space-y-6">
-                    <h3 className="font-bold text-sm border-b border-white/5 pb-2 text-indigo-400">Manual Attributes</h3>
-                    
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Skills (Comma separated)</label>
-                        <input
-                          type="text"
-                          value={profileSkills}
-                          onChange={(e) => setProfileSkills(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Current CGPA</label>
-                        <input
-                          type="text"
-                          value={profileCgpa}
-                          onChange={(e) => setProfileCgpa(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500 text-white"
-                        />
-                      </div>
-                    </div>
+                  <div className="grid lg:grid-cols-3 gap-8">
+                    {/* Left Column: Sync & Settings */}
+                    <div className="space-y-6 lg:col-span-1">
+                      {/* Sync Tools */}
+                      <div className="p-6 glass-panel rounded-2xl border border-white/5 space-y-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent blur-xl pointer-events-none" />
+                        <div>
+                          <h3 className="font-extrabold text-sm text-white mb-1">Quick Sync</h3>
+                          <p className="text-[10px] text-slate-400">Import your credentials from external platforms to auto-fill your profile.</p>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <form onSubmit={handleGitHubImport} className="space-y-3 p-4 bg-slate-900/50 rounded-xl border border-white/5">
+                            <h4 className="font-extrabold text-[11px] text-indigo-400 flex items-center space-x-2">
+                              <Github className="w-4 h-4" />
+                              <span>GitHub Sync</span>
+                            </h4>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Username (e.g. alexrivera)"
+                              value={githubUser}
+                              onChange={(e) => setGithubUser(e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-white/10 text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+                            />
+                            <button
+                              type="submit"
+                              disabled={importingGit}
+                              className="w-full py-2 bg-indigo-500/10 text-indigo-400 hover:text-white hover:bg-indigo-500 border border-indigo-500/20 rounded-lg text-xs font-bold transition-all flex justify-center items-center space-x-1.5"
+                            >
+                              {importingGit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                              <span>Sync Repositories</span>
+                            </button>
+                          </form>
 
-                    <div className="grid sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Portfolio Website</label>
-                        <input
-                          type="text"
-                          value={profileLinks.portfolio}
-                          onChange={(e) => setProfileLinks({ ...profileLinks, portfolio: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500 text-white"
-                        />
+                          <form onSubmit={handleLinkedInImport} className="space-y-3 p-4 bg-slate-900/50 rounded-xl border border-white/5">
+                            <h4 className="font-extrabold text-[11px] text-teal-400 flex items-center space-x-2">
+                              <Linkedin className="w-4 h-4" />
+                              <span>LinkedIn Sync</span>
+                            </h4>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Profile URL"
+                              value={linkedinUrl}
+                              onChange={(e) => setLinkedinUrl(e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-white/10 text-xs focus:outline-none focus:border-teal-500 transition-colors"
+                            />
+                            <button
+                              type="submit"
+                              disabled={importingIn}
+                              className="w-full py-2 bg-teal-500/10 text-teal-400 hover:text-white hover:bg-teal-500 border border-teal-500/20 rounded-lg text-xs font-bold transition-all flex justify-center items-center space-x-1.5"
+                            >
+                              {importingIn ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                              <span>Sync Experience</span>
+                            </button>
+                          </form>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">GitHub Link</label>
-                        <input
-                          type="text"
-                          value={profileLinks.github}
-                          onChange={(e) => setProfileLinks({ ...profileLinks, github: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500 text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">LinkedIn Link</label>
-                        <input
-                          type="text"
-                          value={profileLinks.linkedin}
-                          onChange={(e) => setProfileLinks({ ...profileLinks, linkedin: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs focus:outline-none focus:border-indigo-500 text-white"
-                        />
-                      </div>
-                    </div>
 
-                    {/* Education block */}
-                    <div className="border-t border-white/5 pt-4 space-y-3">
-                      <h4 className="font-extrabold text-xs text-indigo-400">Education Details</h4>
-                      
-                      {profileEducation.length > 0 && (
-                        <div className="space-y-2">
-                          {profileEducation.map((edu, idx) => (
-                            <div key={idx} className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-white/5">
-                              <div>
-                                <p className="text-xs font-bold text-white">{edu.institution}</p>
-                                <p className="text-[10px] text-slate-400">{edu.degree} in {edu.fieldOfStudy} ({edu.startYear} - {edu.endYear}) • CGPA: {edu.cgpa}</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveEducation(idx)}
-                                className="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all"
-                              >
-                                Remove
-                              </button>
+                      {/* General Settings */}
+                      <div className="p-6 glass-panel rounded-2xl border border-white/5 space-y-4">
+                        <div>
+                          <h3 className="font-extrabold text-sm text-white mb-1">Account Settings</h3>
+                          <p className="text-[10px] text-slate-400">Manage your portal preferences and account security.</p>
+                        </div>
+                        <div className="space-y-3 pt-2">
+                          <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg border border-white/5">
+                            <div>
+                              <p className="text-xs font-bold text-white">Email Notifications</p>
+                              <p className="text-[10px] text-slate-400">Receive alerts for new matches.</p>
                             </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="bg-slate-950 p-4 rounded-xl border border-white/5 space-y-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Add Academic Record</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          <input
-                            type="text"
-                            placeholder="Institution (e.g. Stanford)"
-                            value={newEduInst}
-                            onChange={(e) => setNewEduInst(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Degree (e.g. BS)"
-                            value={newEduDegree}
-                            onChange={(e) => setNewEduDegree(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Field (e.g. Computer Science)"
-                            value={newEduField}
-                            onChange={(e) => setNewEduField(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="number"
-                            placeholder="Start Year"
-                            value={newEduStart}
-                            onChange={(e) => setNewEduStart(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="number"
-                            placeholder="End Year"
-                            value={newEduEnd}
-                            onChange={(e) => setNewEduEnd(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="GPA (e.g. 3.8)"
-                            value={newEduCgpa}
-                            onChange={(e) => setNewEduCgpa(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleAddEducation}
-                          className="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white rounded text-[10px] font-bold transition-all"
-                        >
-                          + Add Academic Entry
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Projects block */}
-                    <div className="border-t border-white/5 pt-4 space-y-3">
-                      <h4 className="font-extrabold text-xs text-indigo-400">Project Portfolio</h4>
-                      
-                      {profileProjects.length > 0 && (
-                        <div className="space-y-2">
-                          {profileProjects.map((proj, idx) => (
-                            <div key={idx} className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-white/5">
-                              <div className="space-y-1">
-                                <p className="text-xs font-bold text-white">
-                                  {proj.title}
-                                  {proj.link && <a href={proj.link} target="_blank" rel="noreferrer" className="ml-2 text-[10px] text-indigo-400 hover:underline">Link</a>}
-                                </p>
-                                <p className="text-[10px] text-slate-400">{proj.description}</p>
-                                <p className="text-[9px] text-slate-500">Tech: {Array.isArray(proj.technologies) ? proj.technologies.join(', ') : proj.technologies}</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveProject(idx)}
-                                className="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all"
-                              >
-                                Remove
-                              </button>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" className="sr-only peer" defaultChecked />
+                              <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                            </label>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg border border-white/5">
+                            <div>
+                              <p className="text-xs font-bold text-white">Update Password</p>
+                              <p className="text-[10px] text-slate-400">Ensure your account is secure.</p>
                             </div>
-                          ))}
+                            <button className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                              Change
+                            </button>
+                          </div>
+                          <button className="w-full mt-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-all border border-red-500/20">
+                            Deactivate Account
+                          </button>
                         </div>
-                      )}
-
-                      <div className="bg-slate-950 p-4 rounded-xl border border-white/5 space-y-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Add Portfolio Project</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <input
-                            type="text"
-                            placeholder="Project Title"
-                            value={newProjTitle}
-                            onChange={(e) => setNewProjTitle(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Technologies (comma separated)"
-                            value={newProjTech}
-                            onChange={(e) => setNewProjTech(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Repository Link"
-                            value={newProjLink}
-                            onChange={(e) => setNewProjLink(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white sm:col-span-2"
-                          />
-                          <textarea
-                            placeholder="Project Description Highlight"
-                            value={newProjDesc}
-                            onChange={(e) => setNewProjDesc(e.target.value)}
-                            rows={2}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white sm:col-span-2 focus:outline-none"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleAddProject}
-                          className="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white rounded text-[10px] font-bold transition-all"
-                        >
-                          + Add Project Entry
-                        </button>
                       </div>
                     </div>
 
-                    {/* Certifications block */}
-                    <div className="border-t border-white/5 pt-4 space-y-3">
-                      <h4 className="font-extrabold text-xs text-indigo-400">Certificates & Certifications</h4>
-                      
-                      {profileCertifications.length > 0 && (
-                        <div className="space-y-2">
-                          {profileCertifications.map((cert, idx) => (
-                            <div key={idx} className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-white/5">
-                              <div>
-                                <p className="text-xs font-bold text-white">{cert.name}</p>
-                                <p className="text-[10px] text-slate-400">{cert.issuingOrganization} • Issued: {cert.issueDate} {cert.credentialId && `(ID: ${cert.credentialId})`}</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveCertification(idx)}
-                                className="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all"
-                              >
-                                Remove
-                              </button>
+                    {/* Right Column: Profile Form */}
+                    <div className="lg:col-span-2">
+                      <form onSubmit={handleProfileSave} className="p-8 glass-panel rounded-2xl border border-white/5 space-y-8 relative overflow-hidden">
+                        <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
+                        
+                        {/* Section: Basic Info */}
+                        <div className="space-y-4 relative z-10">
+                          <div className="border-b border-white/5 pb-2">
+                            <h3 className="font-extrabold text-base text-white">Professional Details</h3>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-1">Core Identifiers</p>
+                          </div>
+                          
+                          <div className="grid sm:grid-cols-2 gap-5">
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-300">Technical Skills</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. React, Python, PostgreSQL"
+                                value={profileSkills}
+                                onChange={(e) => setProfileSkills(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm focus:outline-none focus:border-indigo-500 text-white transition-all shadow-inner"
+                              />
                             </div>
-                          ))}
-                        </div>
-                      )}
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-300">Current CGPA</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 3.8"
+                                value={profileCgpa}
+                                onChange={(e) => setProfileCgpa(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm focus:outline-none focus:border-indigo-500 text-white transition-all shadow-inner"
+                              />
+                            </div>
+                          </div>
 
-                      <div className="bg-slate-950 p-4 rounded-xl border border-white/5 space-y-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Add Professional Certificate</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <input
-                            type="text"
-                            placeholder="Certificate Name"
-                            value={newCertName}
-                            onChange={(e) => setNewCertName(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Issuing Organization"
-                            value={newCertOrg}
-                            onChange={(e) => setNewCertOrg(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="date"
-                            placeholder="Issue Date"
-                            value={newCertDate}
-                            onChange={(e) => setNewCertDate(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Credential ID (optional)"
-                            value={newCertId}
-                            onChange={(e) => setNewCertId(e.target.value)}
-                            className="px-2.5 py-1.5 rounded bg-slate-900 border border-white/10 text-[11px] text-white"
-                          />
+                          <div className="grid sm:grid-cols-3 gap-5">
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-300">Portfolio URL</label>
+                              <input
+                                type="text"
+                                placeholder="https://"
+                                value={profileLinks.portfolio}
+                                onChange={(e) => setProfileLinks({ ...profileLinks, portfolio: e.target.value })}
+                                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm focus:outline-none focus:border-indigo-500 text-white transition-all shadow-inner"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-300">GitHub URL</label>
+                              <input
+                                type="text"
+                                placeholder="https://"
+                                value={profileLinks.github}
+                                onChange={(e) => setProfileLinks({ ...profileLinks, github: e.target.value })}
+                                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm focus:outline-none focus:border-indigo-500 text-white transition-all shadow-inner"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-300">LinkedIn URL</label>
+                              <input
+                                type="text"
+                                placeholder="https://"
+                                value={profileLinks.linkedin}
+                                onChange={(e) => setProfileLinks({ ...profileLinks, linkedin: e.target.value })}
+                                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm focus:outline-none focus:border-indigo-500 text-white transition-all shadow-inner"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={handleAddCertification}
-                          className="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white rounded text-[10px] font-bold transition-all"
-                        >
-                          + Add Certificate Entry
-                        </button>
-                      </div>
-                    </div>
 
-                    <div className="border-t border-white/5 pt-4">
-                      <button
-                        type="submit"
-                        className="py-2.5 px-6 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold rounded-lg transition-all"
-                      >
-                        Save Profile & Recalculate ATS
-                      </button>
+                        {/* Section: Education */}
+                        <div className="space-y-4 relative z-10">
+                          <div className="border-b border-white/5 pb-2 flex justify-between items-end">
+                            <div>
+                              <h3 className="font-extrabold text-base text-white">Education Details</h3>
+                              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-1">Academic Background</p>
+                            </div>
+                          </div>
+                          
+                          {profileEducation.length === 0 ? (
+                            <div className="p-6 bg-slate-900/50 rounded-xl border border-white/5 text-center border-dashed">
+                              <GraduationCap className="w-8 h-8 mx-auto text-slate-500 mb-2" />
+                              <p className="text-xs text-slate-400 font-semibold">No education records added yet.</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {profileEducation.map((edu, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-white/5 shadow-sm group">
+                                  <div>
+                                    <p className="text-sm font-extrabold text-white">{edu.institution}</p>
+                                    <p className="text-xs text-indigo-400 font-semibold mt-0.5">{edu.degree} in {edu.fieldOfStudy}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold mt-1">{edu.startYear} - {edu.endYear} • CGPA: {edu.cgpa}</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveEducation(idx)}
+                                    className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 rounded-lg transition-all"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/20 shadow-inner mt-4">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mb-3">Add New Record</p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                              <input type="text" placeholder="Institution Name" value={newEduInst} onChange={(e) => setNewEduInst(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="text" placeholder="Degree (e.g. BS)" value={newEduDegree} onChange={(e) => setNewEduDegree(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="text" placeholder="Field of Study" value={newEduField} onChange={(e) => setNewEduField(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="number" placeholder="Start Year" value={newEduStart} onChange={(e) => setNewEduStart(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="number" placeholder="End Year" value={newEduEnd} onChange={(e) => setNewEduEnd(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="text" placeholder="GPA" value={newEduCgpa} onChange={(e) => setNewEduCgpa(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                            </div>
+                            <button type="button" onClick={handleAddEducation} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-bold transition-all shadow-md">
+                              Add Education
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Section: Projects */}
+                        <div className="space-y-4 relative z-10">
+                          <div className="border-b border-white/5 pb-2">
+                            <h3 className="font-extrabold text-base text-white">Project Portfolio</h3>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-1">Highlighted Work</p>
+                          </div>
+                          
+                          {profileProjects.length === 0 ? (
+                            <div className="p-6 bg-slate-900/50 rounded-xl border border-white/5 text-center border-dashed">
+                              <Briefcase className="w-8 h-8 mx-auto text-slate-500 mb-2" />
+                              <p className="text-xs text-slate-400 font-semibold">No projects added yet. Boost your ATS score by adding some!</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {profileProjects.map((proj, idx) => (
+                                <div key={idx} className="flex justify-between items-start bg-slate-900 p-4 rounded-xl border border-white/5 shadow-sm group">
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center space-x-2">
+                                      <p className="text-sm font-extrabold text-white">{proj.title}</p>
+                                      {proj.link && <a href={proj.link} target="_blank" rel="noreferrer" className="text-teal-400 hover:text-teal-300"><ExternalLink className="w-3 h-3" /></a>}
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-medium leading-relaxed">{proj.description}</p>
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                      {Array.isArray(proj.technologies) ? proj.technologies.map((t: string) => (
+                                        <span key={t} className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[9px] font-bold uppercase tracking-wider">{t}</span>
+                                      )) : (
+                                        <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[9px] font-bold uppercase tracking-wider">{proj.technologies}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveProject(idx)}
+                                    className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 rounded-lg transition-all"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="bg-slate-950 p-5 rounded-xl border border-teal-500/20 shadow-inner mt-4">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-teal-400 mb-3">Add New Project</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                              <input type="text" placeholder="Project Title" value={newProjTitle} onChange={(e) => setNewProjTitle(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-teal-500 focus:outline-none" />
+                              <input type="text" placeholder="Tech Stack (comma separated)" value={newProjTech} onChange={(e) => setNewProjTech(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-teal-500 focus:outline-none" />
+                              <input type="text" placeholder="Repository / Live Link" value={newProjLink} onChange={(e) => setNewProjLink(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-teal-500 focus:outline-none md:col-span-2" />
+                              <textarea placeholder="Brief description of the project and your impact..." value={newProjDesc} onChange={(e) => setNewProjDesc(e.target.value)} rows={3} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-teal-500 focus:outline-none md:col-span-2 resize-none" />
+                            </div>
+                            <button type="button" onClick={handleAddProject} className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-bold transition-all shadow-md">
+                              Add Project
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Section: Certifications */}
+                        <div className="space-y-4 relative z-10">
+                          <div className="border-b border-white/5 pb-2">
+                            <h3 className="font-extrabold text-base text-white">Certifications</h3>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-1">Licenses & Courses</p>
+                          </div>
+                          
+                          {profileCertifications.length === 0 ? (
+                            <div className="p-6 bg-slate-900/50 rounded-xl border border-white/5 text-center border-dashed">
+                              <Trophy className="w-8 h-8 mx-auto text-slate-500 mb-2" />
+                              <p className="text-xs text-slate-400 font-semibold">No certifications added. Stand out by adding some!</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {profileCertifications.map((cert, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-white/5 shadow-sm group">
+                                  <div>
+                                    <p className="text-sm font-extrabold text-white">{cert.name}</p>
+                                    <p className="text-xs text-indigo-400 font-semibold mt-0.5">{cert.issuingOrganization}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold mt-1">Issued: {cert.issueDate} {cert.credentialId && `• ID: ${cert.credentialId}`}</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveCertification(idx)}
+                                    className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 rounded-lg transition-all"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="bg-slate-950 p-5 rounded-xl border border-indigo-500/20 shadow-inner mt-4">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mb-3">Add Certificate</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                              <input type="text" placeholder="Certificate Name" value={newCertName} onChange={(e) => setNewCertName(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="text" placeholder="Issuing Organization" value={newCertOrg} onChange={(e) => setNewCertOrg(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="date" placeholder="Issue Date" value={newCertDate} onChange={(e) => setNewCertDate(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                              <input type="text" placeholder="Credential ID (optional)" value={newCertId} onChange={(e) => setNewCertId(e.target.value)} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:border-indigo-500 focus:outline-none" />
+                            </div>
+                            <button type="button" onClick={handleAddCertification} className="px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white rounded-lg text-xs font-bold transition-all shadow-md">
+                              Add Certificate
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="pt-6 mt-6 border-t border-white/5 relative z-10">
+                          <button
+                            type="submit"
+                            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-indigo-500 to-teal-400 hover:from-indigo-600 hover:to-teal-500 text-white text-sm font-extrabold rounded-xl transition-all shadow-lg hover:shadow-indigo-500/25 flex justify-center items-center space-x-2"
+                          >
+                            <User className="w-4 h-4" />
+                            <span>Save Profile & Settings</span>
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                  </form>
+                  </div>
                 </motion.div>
               )}
 

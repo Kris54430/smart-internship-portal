@@ -38,7 +38,25 @@ export default function LandingPage() {
 
   // Live Counter Animation hook
   const [stats, setStats] = useState({ students: 0, companies: 0, internships: 0, success: 0 });
+  const [targetStats, setTargetStats] = useState({ students: 0, companies: 0, internships: 0, success: 0 });
+
   useEffect(() => {
+    fetch('http://localhost:5000/api/public/stats')
+      .then(res => res.json())
+      .then(data => {
+        setTargetStats({
+          students: data.students || 0,
+          companies: data.companies || 0,
+          internships: data.internships || 0,
+          success: data.success || 0
+        });
+      })
+      .catch(err => console.error('Failed to fetch stats:', err));
+  }, []);
+
+  useEffect(() => {
+    if (targetStats.students === 0 && targetStats.companies === 0 && targetStats.internships === 0 && targetStats.success === 0) return;
+
     const duration = 1500;
     const steps = 40;
     const stepTime = duration / steps;
@@ -46,15 +64,18 @@ export default function LandingPage() {
     const timer = setInterval(() => {
       step++;
       setStats({
-        students: Math.min(10000, Math.round((10000 / steps) * step)),
-        companies: Math.min(500, Math.round((500 / steps) * step)),
-        internships: Math.min(20000, Math.round((20000 / steps) * step)),
-        success: Math.min(95, Math.round((95 / steps) * step))
+        students: Math.min(targetStats.students, Math.round((targetStats.students / steps) * step)),
+        companies: Math.min(targetStats.companies, Math.round((targetStats.companies / steps) * step)),
+        internships: Math.min(targetStats.internships, Math.round((targetStats.internships / steps) * step)),
+        success: Math.min(targetStats.success, Math.round((targetStats.success / steps) * step))
       });
-      if (step >= steps) clearInterval(timer);
+      if (step >= steps) {
+        setStats(targetStats);
+        clearInterval(timer);
+      }
     }, stepTime);
     return () => clearInterval(timer);
-  }, []);
+  }, [targetStats]);
 
   const companyLogos = [
     { name: 'Google', logo: 'Google' },
