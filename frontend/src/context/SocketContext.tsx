@@ -45,8 +45,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Connect to WebSocket server (extracting host from API endpoint)
     const socketUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.NEXT_PUBLIC_API_URL 
-      : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+      ? process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') 
+      : (process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000');
     
     const socketInstance = io(socketUrl, {
       auth: { token: accessToken },

@@ -42,8 +42,8 @@ export default function LandingPage() {
 
   useEffect(() => {
     const statsUrl = process.env.NODE_ENV === 'production' 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/public/stats`
-      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/public/stats`;
+      ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '')}/api/public/stats`
+      : `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000'}/api/public/stats`;
 
     fetch(statsUrl)
       .then(res => res.json())
