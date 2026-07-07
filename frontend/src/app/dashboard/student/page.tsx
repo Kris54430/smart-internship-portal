@@ -11,6 +11,108 @@ import {
   ListTodo, BookOpen, GraduationCap, Trophy, HelpCircle, ExternalLink, Calendar, X
 } from 'lucide-react';
 
+
+// Banner images database helper
+
+// Helper to get category-specific icon, labels and colors matching the e-commerce layout
+const getCategoryBadge = (category: string) => {
+  const cat = (category || "").toLowerCase();
+  if (cat.includes("software") || cat.includes("devops") || cat.includes("cloud")) {
+    return {
+      label: "Software",
+      color: "bg-indigo-500/20 border-indigo-500/30 text-indigo-300",
+      icon: "💻"
+    };
+  }
+  if (cat.includes("ai") || cat.includes("ml") || cat.includes("data")) {
+    return {
+      label: "AI / Data",
+      color: "bg-purple-500/20 border-purple-500/30 text-purple-300",
+      icon: "✨"
+    };
+  }
+  if (cat.includes("security") || cat.includes("cyber")) {
+    return {
+      label: "Security",
+      color: "bg-rose-500/20 border-rose-500/30 text-rose-300",
+      icon: "🛡️"
+    };
+  }
+  if (cat.includes("design") || cat.includes("ui") || cat.includes("ux")) {
+    return {
+      label: "UI / UX",
+      color: "bg-teal-500/20 border-teal-500/30 text-teal-300",
+      icon: "🎨"
+    };
+  }
+  return {
+    label: category || "Tech",
+    color: "bg-slate-500/20 border-slate-500/30 text-slate-300",
+    icon: "💼"
+  };
+};
+
+const getBannerForJob = (job: any) => {
+  const company = (job.company_name || job.company?.name || "").toLowerCase();
+  const category = (job.category || "").toLowerCase();
+  
+  if (company.includes("stripe")) {
+    return "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500&auto=format&fit=crop&q=80";
+  }
+  if (company.includes("vercel")) {
+    return "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=500&auto=format&fit=crop&q=80";
+  }
+  if (company.includes("google")) {
+    return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&auto=format&fit=crop&q=80";
+  }
+  if (company.includes("meta")) {
+    return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&auto=format&fit=crop&q=80";
+  }
+  if (company.includes("adobe")) {
+    return "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=500&auto=format&fit=crop&q=80";
+  }
+  
+  // Category Fallbacks
+  if (category.includes("ai") || category.includes("machine") || category.includes("data")) {
+    return "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500&auto=format&fit=crop&q=80";
+  }
+  if (category.includes("security") || category.includes("cyber") || category.includes("network")) {
+    return "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=500&auto=format&fit=crop&q=80";
+  }
+  if (category.includes("design") || category.includes("ui") || category.includes("ux") || category.includes("product")) {
+    return "https://images.unsplash.com/photo-1541462608141-2ff03cca742e?w=500&auto=format&fit=crop&q=80";
+  }
+  
+  return "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500&auto=format&fit=crop&q=80";
+};
+
+// Lazy loaded Image Component with Skeleton Loading and Fail-safe Fallback
+const JobBannerImage = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [imgSrc, setImgSrc] = React.useState(src);
+
+  return (
+    <div className="relative w-full h-full bg-[#0F1225] overflow-hidden">
+      {loading && (
+        <div className="absolute inset-0 bg-[#0F1225] animate-pulse flex items-center justify-center">
+          <div className="w-5 h-5 rounded-full border border-slate-700 border-t-indigo-500 animate-spin" />
+        </div>
+      )}
+      <img
+        src={imgSrc}
+        alt={alt}
+        className={`${className} ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        onLoad={() => setLoading(false)}
+        onError={() => {
+          setImgSrc("https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500&auto=format&fit=crop&q=80");
+          setLoading(false);
+        }}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
 export default function StudentDashboard() {
   const { user, logout, apiFetch } = useAuth();
   const router = useRouter();
@@ -563,60 +665,103 @@ export default function StudentDashboard() {
                     {jobs.map((job: any) => {
                       const isSaved = profile?.savedInternships?.includes(job.id);
                       return (
-                        <div key={job.id} className="p-6 glass-panel rounded-2xl border border-white/5 relative flex flex-col justify-between glass-panel-hover overflow-hidden">
+                        <div key={job.id} className="glass-panel flex flex-col justify-between min-h-[480px] relative overflow-hidden group hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 rounded-2xl border border-white/5">
                           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent blur-xl pointer-events-none" />
                           
                           <div>
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex items-center space-x-3">
-                                <img src={job.company_logo || 'https://images.unsplash.com/photo-1618401471353-b98aedd07871?w=80'} className="w-10 h-10 rounded-lg object-cover bg-white" alt="logo" />
-                                <div>
-                                  <h4 className="font-bold text-sm text-white group-hover:text-indigo-400 transition-colors">{job.role}</h4>
-                                  <p className="text-xs text-slate-400 font-semibold">{job.company_name}</p>
-                                </div>
-                              </div>
-                              <button 
-                                onClick={() => handleBookmark(job.id, isSaved)}
-                                className={`p-1.5 rounded-lg border transition-colors ${
-                                  isSaved ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'border-white/10 hover:border-indigo-500 text-slate-400 hover:text-white'
-                                }`}
-                              >
-                                <Star className="w-4 h-4 fill-current" />
-                              </button>
-                            </div>
-
-                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-400 mb-4 font-semibold">
-                              <div className="flex items-center space-x-1">
-                                <MapPin className="w-3.5 h-3.5 text-teal-400" />
-                                <span>{job.location}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Clock className="w-3.5 h-3.5 text-indigo-400" />
-                                <span>{job.duration} ({job.mode})</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>{job.stipend}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-1.5 mb-4">
-                              {job.skills_required?.map((sk: string) => (
-                                <span key={sk} className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 text-slate-300">
-                                  {sk}
-                                </span>
-                              ))}
-                            </div>
-
-                            <div className="p-3 bg-indigo-500/5 rounded-xl border border-indigo-500/10 text-[11px] text-slate-400 leading-relaxed font-semibold mb-6 flex justify-between items-center gap-2">
-                              <span>🎯 {job.matchExplanation}</span>
-                              <span className="px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 font-extrabold text-[10px] shrink-0">
-                                {job.matchPercentage}%
+                            {/* Top cover image banner (e-commerce style) */}
+                            <div className="relative w-full h-40 overflow-hidden rounded-t-2xl">
+                              <JobBannerImage 
+                                src={getBannerForJob(job)} 
+                                alt={job.company_name} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-550" 
+                              />
+                              {/* Overlay Category badge (mirrors blinkit/instamart layout) */}
+                              {(() => {
+                                const badge = getCategoryBadge(job.category);
+                                return (
+                                  <span className={`absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border flex items-center space-x-1 backdrop-blur-md ${badge.color}`}>
+                                    <span>{badge.icon}</span>
+                                    <span>{badge.label}</span>
+                                  </span>
+                                );
+                              })()}
+                              {/* Overlay Rating badge */}
+                              <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-amber-400 text-[9px] font-black px-2 py-0.5 rounded-md flex items-center space-x-1 border border-white/5">
+                                <span>⭐</span>
+                                <span>{job.rating || '4.8'}</span>
                               </span>
+                            </div>
+
+                            {/* Padded Content Body */}
+                            <div className="p-5">
+                              <div className="flex justify-between items-start gap-2 mb-3">
+                                <div>
+                                  <h4 className="font-extrabold text-sm text-white group-hover:text-indigo-400 transition-colors leading-tight">
+                                    {job.role}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-400 font-bold flex items-center space-x-1 mt-1">
+                                    <span>🏢</span>
+                                    <span>{job.company_name}</span>
+                                  </p>
+                                </div>
+                                <button 
+                                  onClick={() => handleBookmark(job.id, isSaved)}
+                                  className={`p-1.5 rounded-lg border transition-colors shrink-0 ${
+                                    isSaved ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'border-white/10 hover:border-indigo-500 text-slate-400 hover:text-white'
+                                  }`}
+                                >
+                                  <Star className="w-4 h-4 fill-current" />
+                                </button>
+                              </div>
+
+                              {/* Description */}
+                              <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-3">
+                                {job.description || "Exciting internship opportunity to join our engineering and product teams working on modern features."}
+                              </p>
+
+                              {/* Metadata list */}
+                              <div className="flex flex-wrap gap-x-3 gap-y-2 text-[9px] text-slate-400 mb-3.5 font-bold uppercase tracking-wider">
+                                <div className="flex items-center space-x-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                                  <MapPin className="w-3 h-3.5 text-teal-400" />
+                                  <span>{job.location}</span>
+                                </div>
+                                <div className="flex items-center space-x-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                                  <span>{job.duration} ({job.mode})</span>
+                                </div>
+                                {/* Bold Stipend Display Price style */}
+                                <span className="text-indigo-400 font-black text-xs block">
+                                  {job.stipend}
+                                </span>
+                              </div>
+
+                              {/* Skills chips */}
+                              <div className="flex flex-wrap gap-1.5 mb-4">
+                                {job.skills_required?.slice(0, 4).map((sk: string) => (
+                                  <span key={sk} className="px-2 py-0.5 rounded text-[8px] font-bold bg-white/5 border border-white/5 text-slate-300">
+                                    {sk}
+                                  </span>
+                                ))}
+                                {job.skills_required?.length > 4 && (
+                                  <span className="px-2 py-0.5 rounded text-[8px] font-bold bg-white/5 border border-white/5 text-slate-500">
+                                    +{job.skills_required.length - 4} more
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* AI Compatibility Explanations */}
+                              <div className="p-3 bg-indigo-500/5 rounded-xl border border-indigo-500/10 text-[10px] text-slate-400 leading-relaxed font-semibold flex justify-between items-center gap-2">
+                                <span className="line-clamp-2">🎯 {job.matchExplanation}</span>
+                                <span className="px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 font-extrabold text-[9px] shrink-0">
+                                  {job.matchPercentage}%
+                                </span>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 mt-auto">
+                          {/* Action Footer */}
+                          <div className="grid grid-cols-2 gap-2 p-5 pt-0 mt-auto">
                             <button
                               onClick={() => handleSkillGapTrigger(job)}
                               className="py-2 rounded-xl bg-slate-900 border border-white/5 text-slate-300 hover:bg-white/5 transition-all text-xs font-bold text-center"
